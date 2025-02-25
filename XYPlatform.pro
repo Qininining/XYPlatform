@@ -12,12 +12,12 @@ SOURCES += \
     MotionPlatform.cpp \
     main.cpp \
     ui_mainwindow.cpp \
-    XYPlatform.cpp
+    Stage.cpp
 
 HEADERS += \
     MotionPlatform.h \
     ui_mainwindow.h \
-    XYPlatform.h
+    Stage.h
 
 FORMS += \
     ui_mainwindow.ui
