@@ -23,7 +23,12 @@ FORMS += \
     ui_mainwindow.ui
 
 
-INCLUDEPATH += $$PWD/NanoDrive2.8.12/04_SDK/include
+
+INCLUDEPATH += \
+    $$PWD/NanoDrive2.8.12/04_SDK/include \
+    $$PWD/eigen-3.4.0 \
+
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin

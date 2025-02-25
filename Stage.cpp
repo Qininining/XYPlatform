@@ -1,13 +1,18 @@
 #include "Stage.h"
-#include <QCoreApplication>
+// #include <QCoreApplication>
 
 Stage::Stage(const char* stageID)
     : threadSta_(true)
 {
     platformX_ = new MotionPlatform(stageID, 1);
     platformY_ = new MotionPlatform(stageID, 0);
-    updateTimer_ = new QTimer(this);
+    updateTimer_ = new QTimer();
     connect(updateTimer_, &QTimer::timeout, this, &Stage::update);
+    platformThread_ = new QThread();
+    // Move platformX_ and platformY_ to the new thread
+    platformX_->moveToThread(platformThread_);
+    platformY_->moveToThread(platformThread_);
+    platformThread_->start();
     // Initialize StageData
     stageData_ = StageData();
     // Constructor implementation
@@ -19,6 +24,7 @@ Stage::~Stage()
     delete platformX_;
     delete platformY_;
     delete updateTimer_;
+    delete platformThread_;
     // Destructor implementation
 }
 
@@ -34,6 +40,8 @@ void Stage::shutdown()
     stop();
     platformX_->disConnect();
     platformY_->disConnect();
+    platformThread_->quit();
+    platformThread_->wait();
 }
 
 void Stage::run()
@@ -41,10 +49,10 @@ void Stage::run()
     // updateTimer_->start(1000); // Update every second
     while (threadSta_)
     {
-//                 QCoreApplication::processEvents();
+        // QCoreApplication::processEvents();
         // Infinite loop implementation
     }
-    }
+}
 
 void Stage::stop()
 {
@@ -106,4 +114,11 @@ bool Stage::stopMotion()
     bool resultX = platformX_->stop();
     bool resultY = platformY_->stop();
     return resultX && resultY;
+}
+
+bool Stage::moveJointPosition(const Eigen::Vector2d& jointPosition)
+{
+    int positionX = static_cast<int>(jointPosition(0));
+    int positionY = static_cast<int>(jointPosition(1));
+    return gotoPositionAbsolute(positionX, positionY);
 }

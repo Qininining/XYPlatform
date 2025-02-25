@@ -2,7 +2,9 @@
 #define UI_MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTimer> // 添加 QTimer 头文件
+#include <QTimer>
+#include <QMessageBox>
+#include "Stage.h" // Include Stage header file
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -19,10 +21,16 @@ public:
     ~UI_MainWindow();
 
 private slots:
-    void updateUI(); // 添加槽函数声明
+    void updateUI(); // Slot function declaration
+
+    void on_pushButton_clicked(bool checked);
+
+    void on_Btu_Joint_Pos_2_clicked();
 
 private:
     Ui::UI_MainWindow *ui;
-    QTimer *timer; // 添加 QTimer 成员变量
+    QTimer *timer; // QTimer member variable
+    Stage *stage; // Stage member variable
 };
+
 #endif // UI_MAINWINDOW_H

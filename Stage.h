@@ -3,6 +3,7 @@
 
 #include <QThread>
 #include <QTimer>
+#include <Eigen/Dense>
 #include "MotionPlatform.h"
 
 struct StageData {
@@ -37,6 +38,7 @@ public:
     bool gotoPositionRelative(int diffX, int diffY);
     bool setVelocity(int velocityX, int velocityY);
     bool stopMotion();
+    bool moveJointPosition(const Eigen::Vector2d& jointPosition);
 
 protected:
     void run() override;
@@ -49,6 +51,7 @@ private:
     MotionPlatform* platformY_;
     bool threadSta_;
     QTimer* updateTimer_;
+    QThread* platformThread_; // New thread for platformX_ and platformY_
 
     StageData stageData_;
 };
