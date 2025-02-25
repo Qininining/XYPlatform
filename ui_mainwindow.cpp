@@ -4,7 +4,7 @@
 UI_MainWindow::UI_MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::UI_MainWindow)
-    , stage(new Stage("stageID")) // Initialize Stage instance
+    , stage(new Stage("usb:id:7027461260")) // Initialize Stage instance
 {
     ui->setupUi(this);
 
@@ -29,14 +29,15 @@ UI_MainWindow::~UI_MainWindow()
 void UI_MainWindow::updateUI()
 {
     // Update the UI with the latest Stage data
-    StageData data = stage->getStageData();
+    StageData data;
+    stage->getStageData(data);
     // Example: Update labels or other UI elements with the data
-    ui->lineEdit_Pos_X->setText(QString::number(data.positionX));
-    ui->lineEdit_Pos_Y->setText(QString::number(data.positionY));
-    ui->lineEdit_Vel_X->setText(QString::number(data.speedX));
-    ui->lineEdit_Vel_Y->setText(QString::number(data.speedY));
+    ui->lineEdit_Pos_X->setText(QString::number(data.positionX, 'f', 0));
+    ui->lineEdit_Pos_Y->setText(QString::number(data.positionY, 'f', 0));
+    ui->lineEdit_Vel_X->setText(QString::number(data.speedX, 'f', 0));
+    ui->lineEdit_Vel_Y->setText(QString::number(data.speedY, 'f', 0));
     ui->lineEdit_Sta_X->setText(QString::number(data.statusX));
-    ui->lineEdit_Sta_X->setText(QString::number(data.statusY));
+    ui->lineEdit_Sta_Y->setText(QString::number(data.statusY));
 }
 
 void UI_MainWindow::on_pushButton_clicked(bool checked)
@@ -44,7 +45,7 @@ void UI_MainWindow::on_pushButton_clicked(bool checked)
     if (checked) {
         // Example: Move the stage to a specific position when the button is checked
         stage->initialize();
-        timer->start(100); // Update every second
+        timer->start(50); // Update every second
         ui->pushButton->setText("Shutdown");
     } else {
         // Example: Stop the stage when the button is unchecked

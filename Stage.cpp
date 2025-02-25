@@ -4,8 +4,8 @@
 Stage::Stage(const char* stageID)
     : threadSta_(true)
 {
-    platformX_ = new MotionPlatform(stageID, 1);
-    platformY_ = new MotionPlatform(stageID, 0);
+    platformX_ = new MotionPlatform(stageID, 0);
+    platformY_ = new MotionPlatform(stageID, 1);
     updateTimer_ = new QTimer();
     connect(updateTimer_, &QTimer::timeout, this, &Stage::update);
     platformThread_ = new QThread();
@@ -32,7 +32,7 @@ void Stage::initialize()
 {
     platformX_->connect();
     platformY_->connect();
-    updateTimer_->start(1000); // Update every second
+    updateTimer_->start(50); // Update every second
 }
 
 void Stage::shutdown()
@@ -82,9 +82,10 @@ void Stage::update()
     stageData_.statusY = staY;
 }
 
-StageData Stage::getStageData() const
+bool Stage::getStageData(StageData &stageData) const
 {
-    return stageData_;
+    stageData = stageData_;
+    return true;
 }
 
 // Motion control functions

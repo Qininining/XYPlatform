@@ -31,7 +31,7 @@ public:
     void shutdown();
     void stop();
 
-    StageData getStageData() const;
+    bool getStageData(StageData &stageData) const;
 
     // Motion control functions
     bool gotoPositionAbsolute(int positionX, int positionY);
