@@ -10,10 +10,12 @@ CONFIG += c++17
 
 SOURCES += \
     main.cpp \
-    ui_mainwindow.cpp
+    ui_mainwindow.cpp \
+    XYPlatform.cpp
 
 HEADERS += \
-    ui_mainwindow.h
+    ui_mainwindow.h \
+    XYPlatform.h
 
 FORMS += \
     ui_mainwindow.ui
