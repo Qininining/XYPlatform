@@ -31,6 +31,7 @@ private:
     Ui::UI_MainWindow *ui;
     QTimer *timer; // QTimer member variable
     Stage *stage; // Stage member variable
+    QThread *stageThread; // QThread member variable
 };
 
 #endif // UI_MAINWINDOW_H

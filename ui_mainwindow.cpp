@@ -5,8 +5,14 @@ UI_MainWindow::UI_MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::UI_MainWindow)
     , stage(new Stage("usb:id:7027461260")) // Initialize Stage instance
-{
+    , stageThread(new QThread())
+    {
     ui->setupUi(this);
+
+    // Move stage to the new thread
+    stage->moveToThread(stageThread);
+    // connect(stageThread, &QThread::finished, stage, &QObject::deleteLater);
+    stageThread->start();
 
     // Initialize and start the timer
     timer = new QTimer(this);
@@ -21,7 +27,9 @@ UI_MainWindow::~UI_MainWindow()
     // Shutdown the Stage
     stage->shutdown();
     timer->stop();
-    delete stage;
+    stageThread->quit();
+    stageThread->wait();
+    delete stageThread;
     delete timer;
     delete ui;
 }
