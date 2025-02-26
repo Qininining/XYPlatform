@@ -50,6 +50,7 @@ private:
     MotionPlatform* platformX_;
     MotionPlatform* platformY_;
     bool threadSta_;
+    bool isOpen_; // 添加 isOpen_ 标志位
     QTimer* updateTimer_;
     QThread* platformThread_; // New thread for platformX_ and platformY_
 
