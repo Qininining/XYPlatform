@@ -33,27 +33,26 @@ MotionPlatform::~MotionPlatform()
 
 void MotionPlatform::update()
 {
-    NT_GetPosition_S(ntHandle_, channelIndex_, &position_);
-    // NT_GetVoltageLevel_S(ntHandle_,channelIndex_,&voltage_);
-    NT_GetStatus_S(ntHandle_,channelIndex_,&motionSta_);
-    // qDebug() << "pos:" << position_ << "voltage:" << voltage_ << "sta:" << motionSta_;
-    // quintptr currentThreadId = reinterpret_cast<quintptr>(QThread::currentThreadId());
-    // qDebug() << "MotionPlatform thread ID:" << currentThreadId;
+    if (!isOpen_) return;
 
+    if (NT_GetPosition_S(ntHandle_, channelIndex_, &position_) != NT_OK ||
+        NT_GetStatus_S(ntHandle_, channelIndex_, &motionSta_) != NT_OK) {
+        qDebug() << "Failed to get position or status, disconnecting...";
+        disConnect();
+        return;
+    }
 
     // 更新当前位置到缓冲区
     positionBuffer_[bufferIndex_] = position_;
     bufferIndex_ = (bufferIndex_ + 1) % bufferSize_; // 循环更新索引
 
-    if(count < bufferSize_){
-        count ++;
+    if (count < bufferSize_) {
+        count++;
     }
 
-
     // 计算平均速度，考虑方向
-    if (isOpen_ && (count >= bufferSize_)) { // 确保只有在连接状态下才进行计算
+    if (count >= bufferSize_) { // 确保只有在连接状态下才进行计算
         double totalDisplacement = 0;
-
 
         // 从最新的位置向前遍历，以保持正确的顺序
         for (int i = 0; i < bufferSize_ - 1; ++i) {
@@ -84,8 +83,9 @@ bool MotionPlatform::connect()
         updateTimer_->start();
 #endif
     }
-    error_ = NT_SetClosedLoopMaxFrequency_S(ntHandle_, channelIndex_, 8000);
+    NT_SetClosedLoopMaxFrequency_S(ntHandle_, channelIndex_, 8000);
     NT_LimitEnable_S(ntHandle_, channelIndex_, NT_LIMIT_DISABLED);//限位会影响中速运动
+    NT_SetAccumulateRelativePositions_S(ntHandle_, channelIndex_, 0);// 不累积相对位置
     return error_;
 }
 
@@ -115,18 +115,18 @@ bool MotionPlatform::disConnect()
 
 bool MotionPlatform::gotoPositionAbsolute( signed int position)
 {
-    error_ = NT_GotoPositionAbsolute_S(ntHandle_,
-    channelIndex_,
-    position);
-    if(error_ != NT_OK)
+    if (!isOpen_) return false;
+    error_ = NT_GotoPositionAbsolute_S(ntHandle_, channelIndex_, position);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::GotoPositionAbsolute error_:" << error_;
     return error_;
 }
 
-bool MotionPlatform::gotoPositionRelative( signed int diff)
+bool MotionPlatform::gotoPositionRelative(signed int diff)
 {
-    error_ = NT_GotoPositionRelative_S(ntHandle_,channelIndex_,diff);
-    if(error_ != NT_OK)
+    if (!isOpen_) return false;
+    error_ = NT_GotoPositionRelative_S(ntHandle_, channelIndex_, diff);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::GotoPositionRelative error_:" << error_;
     return error_;
 }
@@ -145,20 +145,22 @@ bool MotionPlatform::getPosition(int &position)
 #endif
 }
 
-bool MotionPlatform::stepMove( signed int steps,unsigned int amplitude,unsigned int frequency)
+bool MotionPlatform::stepMove(signed int steps, unsigned int amplitude, unsigned int frequency)
 {
-    error_ = NT_StepMove_S(ntHandle_,channelIndex_,steps,amplitude,frequency);
-    if(error_ != NT_OK)
+    if (!isOpen_) return false;
+    error_ = NT_StepMove_S(ntHandle_, channelIndex_, steps, amplitude, frequency);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::StepMove error_:" << error_;
     return error_;
 }
 
-bool MotionPlatform::continueMove( bool dir, unsigned int amplitude,unsigned int frequency)
+bool MotionPlatform::continueMove(bool dir, unsigned int amplitude, unsigned int frequency)
 {
+    if (!isOpen_) return false;
     signed int steps = 30000;
     steps = steps * dir;
-    error_ = NT_StepMove_S(ntHandle_,channelIndex_,steps,amplitude,frequency);
-    if(error_ != NT_OK)
+    error_ = NT_StepMove_S(ntHandle_, channelIndex_, steps, amplitude, frequency);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::StepMove error_:" << error_;
     return error_;
 }
@@ -169,18 +171,20 @@ bool MotionPlatform::continueMove( bool dir, unsigned int amplitude,unsigned int
 //● scanSpeed (unsigned 32bit), 输入 - 扫描速度。有效输入范围是 1 ... 4,095,000。
 //将 0-100V 等分成 4096 份，扫描速度表示每秒扫描电压变化的份数。比如，值为 1
 //时，在从 0 扫描到 4,095 需要 4,095 秒，而全速扫描（值为 4,095,000）只需一毫秒。
-bool MotionPlatform::scanMoveAbsolute( unsigned int target, unsigned int time)
+bool MotionPlatform::scanMoveAbsolute(unsigned int target, unsigned int time)
 {
-    error_ = NT_ScanMoveAbsolute_S(ntHandle_, channelIndex_,target, 4095000/time);
-    if(error_ != NT_OK)
+    if (!isOpen_) return false;
+    error_ = NT_ScanMoveAbsolute_S(ntHandle_, channelIndex_, target, 4095000 / time);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::ScanMoveAbsolute error_:" << error_;
     return error_;
 }
 
-bool MotionPlatform::scanMoveRelative( signed int target, unsigned int time)
+bool MotionPlatform::scanMoveRelative(signed int target, unsigned int time)
 {
-    error_ = NT_ScanMoveRelative_S(ntHandle_, channelIndex_,target, 4095000/time);
-    if(error_ != NT_OK)
+    if (!isOpen_) return false;
+    error_ = NT_ScanMoveRelative_S(ntHandle_, channelIndex_, target, 4095000 / time);
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::ScanMoveRelative error_:" << error_;
     return error_;
 }
@@ -190,35 +194,30 @@ bool MotionPlatform::scanMoveRelative( signed int target, unsigned int time)
 //nm/s,旋转定位台的单位是 u°/s。有效值范围是 0...5,000,000。0 默认禁用速度控制。
 bool MotionPlatform::setVelocity(signed int velocity, signed int target)
 {
-    // velocity_ = velocity;
+    if (!isOpen_) return false;
     int dir = 0;
     unsigned int speed = 0;
-    if(velocity > 0)
+    if (velocity > 0)
     {
         dir = 1;
         speed = velocity;
     }
-
-    else if(velocity < 0)
+    else if (velocity < 0)
     {
         dir = -1;
         speed = -1 * velocity;
     }
-    else{
+    else
+    {
         stop();
-        // velocity_ = 0;
         return 1;
     }
 
     error_ = NT_SetClosedLoopMoveSpeed_S(ntHandle_, channelIndex_, NT_SPEED_ENABLED, speed);
-    if(error_ != NT_OK)
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::setVelocity error_(1):" << error_;
-    // if(speed >= 100000){
-        // error_ = NT_SetClosedLoopMaxFrequency_S(ntHandle_, channelIndex_, 7000);
-    //     qDebug() << "11111111111:" << error_;
-    // }
     error_ = NT_GotoPositionRelative_S(ntHandle_, channelIndex_, target * dir);
-    if(error_ != NT_OK)
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::setVelocity error_(2):" << error_;
     return error_;
 }
@@ -240,12 +239,12 @@ bool MotionPlatform::setPosition()
 
 bool MotionPlatform::stop()
 {
-    // velocity_ = 0;
+    if (!isOpen_) return false;
     error_ = NT_Stop_S(ntHandle_, channelIndex_);
-    if(error_ != NT_OK)
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::closeVelocityMode error_(1):" << error_;
     error_ = NT_SetClosedLoopMoveSpeed_S(ntHandle_, channelIndex_, NT_SPEED_DISABLED, 0);
-    if(error_ != NT_OK)
+    if (error_ != NT_OK)
         qDebug() << "MotionPlatform::closeVelocityMode error_(2):" << error_;
     NT_SetClosedLoopHoldEnabled_S(ntHandle_,channelIndex_,NT_CLOSELOOP_ENABLED);
     return error_;
