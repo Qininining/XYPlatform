@@ -222,6 +222,26 @@ bool MotionPlatform::setVelocity(signed int velocity, signed int target)
     return error_;
 }
 
+
+bool MotionPlatform::setVelocityMode(unsigned int velocity)
+{
+    if (!isOpen_) return false;
+    error_ = NT_SetClosedLoopMoveSpeed_S(ntHandle_, channelIndex_, NT_SPEED_ENABLED, velocity);
+    if (error_ != NT_OK)
+        qDebug() << "MotionPlatform::setVelocityMode error_:" << error_;
+    return error_;
+}
+
+bool MotionPlatform::closeVelocityMode()
+{
+    if (!isOpen_) return false;
+    error_ = NT_SetClosedLoopMoveSpeed_S(ntHandle_, channelIndex_, NT_SPEED_DISABLED, 0);
+    error_ &= NT_SetClosedLoopHoldEnabled_S(ntHandle_,channelIndex_,NT_CLOSELOOP_ENABLED);
+    if (error_ != NT_OK)
+        qDebug() << "MotionPlatform::closeVelocityMode error_:" << error_;
+    return error_;
+}
+
 bool MotionPlatform::getVelocity(signed int &velocity)
 {
     velocity = velocity_;

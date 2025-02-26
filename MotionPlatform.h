@@ -45,6 +45,8 @@ public:
     bool getVelocity(signed int &velocity);
     bool setPosition();
     bool setVelocity(signed int velocity, signed int target = 45000000);
+    bool setVelocityMode(unsigned int velocity);
+    bool closeVelocityMode();
     bool stop();
     bool stepMove(signed int steps, unsigned int amplitude, unsigned int frequency);
     bool continueMove(bool dir, unsigned int amplitude, unsigned int frequency);
